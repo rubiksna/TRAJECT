@@ -305,11 +305,16 @@ public class PlayerMovement : MonoBehaviour
 
     private void SpeedControl()
     {
-        // limiting speed on slope
-        if (OnSlope() && !exitingSlope)
+        // limiting speed on slope (project velocity to slope plane)
+        if (OnSlope() && !exitingSlope && grounded)
         {
-            if (rb.linearVelocity.magnitude > moveSpeed)
-                rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
+            Vector3 slopeVel = Vector3.ProjectOnPlane(rb.linearVelocity, slopeHit.normal);
+            if (slopeVel.magnitude > moveSpeed)
+            {
+                Vector3 limited = slopeVel.normalized * moveSpeed;
+                // preserve vertical velocity component
+                rb.linearVelocity = new Vector3(limited.x, rb.linearVelocity.y, limited.z);
+            }
         }
         else
         {
@@ -319,8 +324,8 @@ public class PlayerMovement : MonoBehaviour
             // Limit velocity if needed
             if (flatVel.magnitude > moveSpeed)
             {
-                Vector3 limitedVel = flatVel.normalized * moveSpeed;
-                rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.y);
+                Vector2 limitedFlat = flatVel.normalized * moveSpeed;
+                rb.linearVelocity = new Vector3(limitedFlat.x, rb.linearVelocity.y, limitedFlat.y);
             }
         }
     }
